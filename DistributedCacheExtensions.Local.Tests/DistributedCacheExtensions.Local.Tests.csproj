@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DistributedCacheExtensions\DistributedCacheExtensions.csproj" />
+    <ProjectReference Include="..\DistributedCacheExtensions.Local\DistributedCacheExtensions.Local.csproj" />
   </ItemGroup>
 
 </Project>

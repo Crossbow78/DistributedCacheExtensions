@@ -1,13 +1,12 @@
-﻿using DistributedCacheExtensions.Abstraction;
+﻿using DistributedCacheExtensions.Local.Abstraction;
 using System;
-using System.IO.Abstractions;
 
-namespace DistributedCacheExtensions.Internal
+namespace DistributedCacheExtensions.Local.Internal
 {
-    internal class CacheMetadata : ICacheMetadata
+    internal record CacheMetadata : ICacheMetadata
     {
         public string Key { get; set; }
-        public IFileInfo FileInfo { get; set; }
+        public string Reference { get; set; }
         public DateTime? AbsoluteExpiration { get; set; }
         public TimeSpan? SlidingExpiration { get; set; }
         public DateTime? SlidingExpirationMoment { get; set; }

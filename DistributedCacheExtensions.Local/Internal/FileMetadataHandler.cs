@@ -1,73 +1,68 @@
-﻿using DistributedCacheExtensions.Abstraction;
+﻿using DistributedCacheExtensions.Local.Abstraction;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
-using System.IO.Abstractions;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
-namespace DistributedCacheExtensions.Internal
+namespace DistributedCacheExtensions.Local.Internal
 {
     internal class FileMetadataHandler : BaseMetadataHandler, IMetadataHandler
     {
         private readonly ILogger _logger;
-        public FileMetadataHandler(ILoggerFactory loggerFactory, IOptions<DistributedFileCacheOptions> options)
-            : this(loggerFactory, options, new DateTimeProvider(), new FileSystem())
-        {
-        }
+        private readonly IStorageHandler _storageHandler;
 
-        public FileMetadataHandler(ILoggerFactory loggerFactory, IOptions<DistributedFileCacheOptions> options, IDateTimeProvider dateTimeProvider, IFileSystem fileSystem)
-            : base(loggerFactory, options, dateTimeProvider, fileSystem)
+        public FileMetadataHandler(ILoggerFactory loggerFactory, IOptions<DistributedFileCacheOptions> options, IStorageHandler storageHandler, IDateTimeProvider dateTimeProvider)
+            : base(loggerFactory, options, dateTimeProvider)
         {
             _logger = loggerFactory?.CreateLogger<FileMetadataHandler>() ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _storageHandler = storageHandler ?? throw new ArgumentNullException(nameof(storageHandler));
         }
 
-        public override void Expire(ICacheMetadata cacheMetadata)
+        public override async Task Expire(ICacheMetadata cacheMetadata)
         {
-            var metadataFileInfo = _fileSystem.FileInfo.FromFileName(cacheMetadata.FileInfo.FullName + ".metadata");
-            metadataFileInfo.Delete();
-            metadataFileInfo.Refresh();
-            cacheMetadata.FileInfo.Delete();
-            cacheMetadata.FileInfo.Refresh();
+            var metadataReference = GetCacheReference(cacheMetadata.Reference);
+            await _storageHandler.Delete(metadataReference);
+            await _storageHandler.Delete(cacheMetadata.Reference);
         }
 
-        public override ICacheMetadata Get(string key)
+        public override async Task<ICacheMetadata> Get(string key)
         {
             var reference = _dateTimeProvider.Now.UtcDateTime;
 
             var fileName = Convert.ToBase64String(Encoding.UTF8.GetBytes(key));
 
-            var contentFile = GetCacheFile(fileName);
-            var metadataFile = GetCacheFile(fileName + ".metadata");
+            var contentReference = GetStorageReference(fileName);
+            var metadataReference = GetCacheReference(contentReference);
 
-            var contentFileInfo = _fileSystem.FileInfo.FromFileName(contentFile);
-            var metadataFileInfo = _fileSystem.FileInfo.FromFileName(metadataFile);
+            var metadataContent = await _storageHandler.Load(metadataReference);
 
             ExpirationMetadata metadata = null;
-            if (metadataFileInfo.Exists)
+            if (metadataContent != null)
             {
-                metadata = JsonSerializer.Deserialize<ExpirationMetadata>(_fileSystem.File.ReadAllText(metadataFileInfo.FullName));
+                metadata = JsonSerializer.Deserialize<ExpirationMetadata>(metadataContent);
             }
 
             var cacheMetadata = new CacheMetadata
             {
                 Key = key,
-                FileInfo = contentFileInfo,
+                Reference = contentReference,
                 AbsoluteExpiration = metadata?.AbsoluteExpiration,
                 SlidingExpiration = metadata?.SlidingExpirationMs != null ? TimeSpan.FromMilliseconds(metadata.SlidingExpirationMs.Value) : null,
                 SlidingExpirationMoment = metadata?.SlidingExpirationMoment
             };
 
-            CheckExpiration(cacheMetadata, reference);
+            await CheckExpiration(cacheMetadata, reference);
 
             return cacheMetadata;
         }
 
-        public override void Set(ICacheMetadata cacheMetadata)
+        public override async Task Set(ICacheMetadata cacheMetadata)
         {
             var referenceTime = _dateTimeProvider.Now.UtcDateTime;
 
-            var metadataFileInfo = _fileSystem.FileInfo.FromFileName(cacheMetadata.FileInfo.FullName + ".metadata");
+            var metadataReference = GetCacheReference(cacheMetadata.Reference);
 
             var expirationMetadata = new ExpirationMetadata
             {
@@ -79,7 +74,7 @@ namespace DistributedCacheExtensions.Internal
             _logger.LogDebug("Setting absolute expiration for {key} to {expirationDate}", cacheMetadata.Key, cacheMetadata.AbsoluteExpiration);
             _logger.LogDebug("Setting sliding expiration for {key} to {expirationTime}", cacheMetadata.Key, cacheMetadata.SlidingExpiration);
 
-            _fileSystem.File.WriteAllText(metadataFileInfo.FullName, JsonSerializer.Serialize(expirationMetadata));
+            await _storageHandler.Save(metadataReference, JsonSerializer.SerializeToUtf8Bytes(expirationMetadata));
         }
 
         private class ExpirationMetadata

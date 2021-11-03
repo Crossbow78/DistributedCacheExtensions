@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
 using System;
 
-namespace DistributedCacheExtensions.Internal
+namespace DistributedCacheExtensions.Local.Internal
 {
     internal static class DistributedCacheEntryOptionsExtensions
     {

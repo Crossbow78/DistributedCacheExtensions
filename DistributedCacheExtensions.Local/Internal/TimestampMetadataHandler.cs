@@ -1,33 +1,31 @@
-﻿using DistributedCacheExtensions.Abstraction;
+﻿using DistributedCacheExtensions.Local.Abstraction;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.IO.Abstractions;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace DistributedCacheExtensions.Internal
+namespace DistributedCacheExtensions.Local.Internal
 {
     internal class TimestampMetadataHandler : BaseMetadataHandler, IMetadataHandler
     {
         private readonly ILogger _logger;
-
-        public TimestampMetadataHandler(ILoggerFactory loggerFactory, IOptions<DistributedFileCacheOptions> options)
-            : this(loggerFactory, options, new DateTimeProvider(), new FileSystem())
-        {
-        }
+        private readonly IFileSystem _fileSystem;
 
         public TimestampMetadataHandler(ILoggerFactory loggerFactory, IOptions<DistributedFileCacheOptions> options, IDateTimeProvider dateTimeProvider, IFileSystem fileSystem)
-            : base(loggerFactory, options, dateTimeProvider, fileSystem)
+            : base(loggerFactory, options, dateTimeProvider)
         {
             _logger = loggerFactory?.CreateLogger<TimestampMetadataHandler>() ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
             VerifyPermissions();
         }
 
-        public override ICacheMetadata Get(string key)
+        public override async Task<ICacheMetadata> Get(string key)
         {
             var reference = _dateTimeProvider.Now.UtcDateTime;
 
-            var fileName = GetCacheFile(Convert.ToBase64String(Encoding.UTF8.GetBytes(key)));
+            var fileName = GetStorageReference(Convert.ToBase64String(Encoding.UTF8.GetBytes(key)));
 
             // Note: relies on disabled NTFS behavior:
             // fsutil behavior set disablelastaccess 0x3
@@ -36,42 +34,45 @@ namespace DistributedCacheExtensions.Internal
             var metadata = new CacheMetadata
             {
                 Key = key,
-                FileInfo = fileInfo,
+                Reference = fileName,
                 AbsoluteExpiration = fileInfo.LastWriteTimeUtc > fileInfo.CreationTimeUtc ? fileInfo.LastWriteTimeUtc : null,
                 SlidingExpiration = fileInfo.LastAccessTimeUtc > fileInfo.CreationTimeUtc ? fileInfo.LastAccessTimeUtc - fileInfo.CreationTimeUtc : null,
                 SlidingExpirationMoment = fileInfo.LastAccessTimeUtc > fileInfo.CreationTimeUtc ? fileInfo.LastAccessTimeUtc : null,
             };
 
-            CheckExpiration(metadata, reference);
+            await CheckExpiration(metadata, reference);
 
             return metadata;
         }
 
-        public override void Expire(ICacheMetadata cacheMetadata)
+        public override Task Expire(ICacheMetadata cacheMetadata)
         {
-            cacheMetadata.FileInfo.Delete();
-            cacheMetadata.FileInfo.Refresh();
+            var fileInfo = _fileSystem.FileInfo.FromFileName(cacheMetadata.Reference);
+            fileInfo.Delete();
+            return Task.CompletedTask;
         }
 
-        public override void Set(ICacheMetadata cacheMetadata)
+        public override Task Set(ICacheMetadata cacheMetadata)
         {
             var referenceTime = _dateTimeProvider.Now.UtcDateTime;
             var absoluteExpiration = cacheMetadata.AbsoluteExpiration ?? referenceTime.AddSeconds(-1);
             var slidingExpiration = referenceTime.Add(cacheMetadata.SlidingExpiration ?? TimeSpan.FromSeconds(-1));
 
-            _fileSystem.File.SetCreationTimeUtc(cacheMetadata.FileInfo.FullName, referenceTime);
-            _fileSystem.File.SetLastWriteTimeUtc(cacheMetadata.FileInfo.FullName, absoluteExpiration);
-            _fileSystem.File.SetLastAccessTimeUtc(cacheMetadata.FileInfo.FullName, slidingExpiration);
+            var fileInfo = _fileSystem.FileInfo.FromFileName(cacheMetadata.Reference);
+            _fileSystem.File.SetCreationTimeUtc(fileInfo.FullName, referenceTime);
+            _fileSystem.File.SetLastWriteTimeUtc(fileInfo.FullName, absoluteExpiration);
+            _fileSystem.File.SetLastAccessTimeUtc(fileInfo.FullName, slidingExpiration);
 
             _logger.LogDebug("Setting absolute expiration for {key} to {expirationDate}", cacheMetadata.Key, absoluteExpiration);
             _logger.LogDebug("Setting sliding expiration for {key} to {expirationTime}", cacheMetadata.Key, cacheMetadata.SlidingExpiration);
+            return Task.CompletedTask;
         }
 
         private void VerifyPermissions()
         {
             try
             {
-                var testFile = GetCacheFile("testfile");
+                var testFile = GetStorageReference("testfile");
                 var testDate = new DateTime(2000, 01, 01, 01, 23, 45, DateTimeKind.Utc);
                 var testContent = "TimestampMetadataHandler";
                 var file = _fileSystem.FileInfo.FromFileName(testFile);

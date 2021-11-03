@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 
-namespace DistributedCacheExtensions
+namespace DistributedCacheExtensions.Local
 {
     public class DistributedFileCacheOptions : IOptions<DistributedFileCacheOptions>
     {

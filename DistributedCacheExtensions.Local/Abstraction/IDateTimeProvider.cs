@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DistributedCacheExtensions.Abstraction
+namespace DistributedCacheExtensions.Local.Abstraction
 {
     internal interface IDateTimeProvider
     {

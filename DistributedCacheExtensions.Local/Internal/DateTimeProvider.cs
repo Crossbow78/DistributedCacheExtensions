@@ -1,7 +1,7 @@
-﻿using DistributedCacheExtensions.Abstraction;
+﻿using DistributedCacheExtensions.Local.Abstraction;
 using System;
 
-namespace DistributedCacheExtensions.Internal
+namespace DistributedCacheExtensions.Local.Internal
 {
     internal class DateTimeProvider : IDateTimeProvider
     {

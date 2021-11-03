@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using DistributedCacheExtensions.Local;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 
@@ -17,10 +18,10 @@ namespace DistributedFileCacheExample.ConsoleApp
         {
             return services
                 //.AddDistributedMemoryCache()
-                .AddDistributedFileCache(x =>
+                .AddDistributedFileCache(options =>
                 {
-                    x.Path = @"D:\Dev\Temp\Cache\";
-                    //x.MetadataHandler = DistributedCacheExtensions.MetadataHandler.SeparateFile;
+                    options.Path = @"D:\Dev\Temp\Cache\";
+                    options.MetadataHandler = MetadataHandler.SeparateFile;
                 })
                 .AddLogging(x => x
                     .SetMinimumLevel(LogLevel.Debug)
