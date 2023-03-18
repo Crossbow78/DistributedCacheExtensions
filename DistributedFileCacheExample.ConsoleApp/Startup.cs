@@ -21,6 +21,7 @@ namespace DistributedFileCacheExample.ConsoleApp
                 .AddDistributedFileCache(options =>
                 {
                     options.Path = @"D:\Dev\Temp\Cache\";
+                    //options.Path = @"/mnt/d/Dev/Temp/Cache/";
                     options.MetadataHandler = MetadataHandler.SeparateFile;
                 })
                 .AddLogging(x => x

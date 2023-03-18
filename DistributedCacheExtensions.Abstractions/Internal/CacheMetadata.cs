@@ -1,9 +1,8 @@
-﻿using DistributedCacheExtensions.Local.Abstraction;
-using System;
+﻿using System;
 
-namespace DistributedCacheExtensions.Local.Internal
+namespace DistributedCacheExtensions.Abstractions.Internal
 {
-    internal record CacheMetadata : ICacheMetadata
+    public record CacheMetadata : ICacheMetadata
     {
         public string Key { get; set; }
         public string Reference { get; set; }

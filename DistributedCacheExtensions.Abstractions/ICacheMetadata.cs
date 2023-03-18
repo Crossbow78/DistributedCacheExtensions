@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace DistributedCacheExtensions.Local.Abstraction
+namespace DistributedCacheExtensions.Abstractions
 {
-    internal interface ICacheMetadata
+    public interface ICacheMetadata
     {
         DateTime? AbsoluteExpiration { get; set; }
         string Reference { get; set; }

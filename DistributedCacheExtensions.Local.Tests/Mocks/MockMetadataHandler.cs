@@ -1,4 +1,5 @@
-﻿using DistributedCacheExtensions.Local.Abstraction;
+﻿using DistributedCacheExtensions.Abstractions;
+using DistributedCacheExtensions.Abstractions.Internal;
 using DistributedCacheExtensions.Local.Internal;
 using System.Collections.Concurrent;
 using System.IO.Abstractions.TestingHelpers;

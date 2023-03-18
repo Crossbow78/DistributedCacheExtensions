@@ -1,5 +1,4 @@
-﻿using DistributedCacheExtensions.Local.Abstraction;
-using DistributedCacheExtensions.Local.Internal;
+﻿using DistributedCacheExtensions.Abstractions.Internal;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using System;
@@ -9,15 +8,15 @@ using System.Threading.Tasks;
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DistributedCacheExtensions.Local.Tests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
-namespace DistributedCacheExtensions.Local
+namespace DistributedCacheExtensions.Abstractions
 {
-    internal class DistributedFileCache : IDistributedCache
+    public class DistributedCache : IDistributedCache
     {
         private readonly ILogger _logger;
         private readonly IMetadataHandler _metadataHandler;
         private readonly IStorageHandler _storageHandler;
 
-        public DistributedFileCache(ILogger<DistributedFileCache> logger, IStorageHandler storageHandler, IMetadataHandler metadataHandler)
+        public DistributedCache(ILogger<DistributedCache> logger, IStorageHandler storageHandler, IMetadataHandler metadataHandler)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _storageHandler = storageHandler ?? throw new ArgumentNullException(nameof(storageHandler));

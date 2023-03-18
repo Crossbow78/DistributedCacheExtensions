@@ -1,4 +1,5 @@
-﻿using DistributedCacheExtensions.Local.Abstraction;
+﻿using DistributedCacheExtensions.Abstractions;
+using DistributedCacheExtensions.Abstractions.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
@@ -31,9 +32,7 @@ namespace DistributedCacheExtensions.Local.Internal
         {
             var reference = _dateTimeProvider.Now.UtcDateTime;
 
-            var fileName = Convert.ToBase64String(Encoding.UTF8.GetBytes(key));
-
-            var contentReference = GetStorageReference(fileName);
+            var contentReference = GetStorageReference(Convert.ToBase64String(Encoding.UTF8.GetBytes(key)));
             var metadataReference = GetCacheReference(contentReference);
 
             var metadataContent = await _storageHandler.Load(metadataReference);

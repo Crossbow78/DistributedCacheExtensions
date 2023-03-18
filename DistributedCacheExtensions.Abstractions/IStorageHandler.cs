@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace DistributedCacheExtensions.Local.Abstraction
+namespace DistributedCacheExtensions.Abstractions
 {
-    interface IStorageHandler
+    public interface IStorageHandler
     {
         Task Save(string reference, byte[] value);
 

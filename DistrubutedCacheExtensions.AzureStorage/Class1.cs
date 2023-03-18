@@ -20,11 +20,22 @@ namespace DistrubutedCacheExtensions.AzureStorage
 
             var client = new BlobContainerClient(blobUri, tokenCredential);
 
-            var blobResponse = await client.UploadBlobAsync(blobName, BinaryData.FromString("mydata"));
-            blobResponse.Value.ETag.ToString().Should().HaveLength(17);
+            try
+            {
+                var blobResponse = await client.UploadBlobAsync(blobName, BinaryData.FromString("mydata"));
+                blobResponse.Value.ETag.ToString().Trim('"').Should().HaveLength(17);
 
-            var delete = await client.DeleteBlobIfExistsAsync(blobName);
-            delete.Value.Should().BeTrue();
+                await foreach (var page in client.GetBlobsAsync().AsPages())
+                {
+                    page.Values.Should().HaveCount(1);
+                    page.Values.Should().ContainSingle().Which.Name.Should().Be(blobName);
+                }
+            }
+            finally
+            {
+                var delete = await client.DeleteBlobIfExistsAsync(blobName);
+                delete.Value.Should().BeTrue();
+            }
         }
 
         [Fact]
@@ -35,10 +46,10 @@ namespace DistrubutedCacheExtensions.AzureStorage
 
             var client = new BlobClient(blobUri, tokenCredential);
             var blobResponse = await client.UploadAsync(BinaryData.FromString("mydata"));
-            blobResponse.Value.ETag.ToString().Should().HaveLength(17);
+            blobResponse.Value.ETag.ToString().Trim('"').Should().HaveLength(17);
 
             var blobResponse2 = await client.DownloadContentAsync();
-            blobResponse2.Value.Details.ETag.ToString().Should().HaveLength(17);
+            blobResponse2.Value.Details.ETag.ToString().Trim('"').Should().HaveLength(17);
             blobResponse2.Value.Details.ContentLength.Should().Be(6);
             blobResponse2.Value.Content.ToString().Should().Be("mydata");
 

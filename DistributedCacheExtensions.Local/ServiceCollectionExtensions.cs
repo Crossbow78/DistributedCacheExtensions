@@ -1,11 +1,12 @@
 ﻿using DistributedCacheExtensions.Local;
-using DistributedCacheExtensions.Local.Abstraction;
+using DistributedCacheExtensions.Abstractions;
 using DistributedCacheExtensions.Local.Internal;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO.Abstractions;
+using DistributedCacheExtensions.Abstractions.Internal;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -29,10 +30,11 @@ namespace Microsoft.Extensions.DependencyInjection
         private static IServiceCollection AddDistributedFileCacheInternal(this IServiceCollection services)
         {
             services.AddOptions();
-            services.TryAdd(ServiceDescriptor.Singleton<IDistributedCache, DistributedFileCache>());
+            services.TryAdd(ServiceDescriptor.Singleton<IDistributedCache, DistributedCache>());
+            services.TryAdd(ServiceDescriptor.Singleton<IDateTimeProvider, DateTimeProvider>());
+
             services.TryAdd(ServiceDescriptor.Singleton<IStorageHandler, FileStorageHandler>());
             services.TryAdd(ServiceDescriptor.Singleton<IFileSystem, FileSystem>());
-            services.TryAdd(ServiceDescriptor.Singleton<IDateTimeProvider, DateTimeProvider>());
             return services;
         }
 

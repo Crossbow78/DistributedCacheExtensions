@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
 using System;
 
-namespace DistributedCacheExtensions.Local.Internal
+namespace DistributedCacheExtensions.Abstractions.Internal
 {
-    internal static class DistributedCacheEntryOptionsExtensions
+    public static class DistributedCacheEntryOptionsExtensions
     {
         internal static DateTime? GetAbsoluteExpiration(this DistributedCacheEntryOptions options)
         {

@@ -55,7 +55,7 @@ namespace DistributedCacheExtensions.Local.Tests
         }
 
         [Fact]
-        public async Task DeleteAsync()
+        public async Task Delete_DeletesFile()
         {
             // Arrange
             _fileSystem.AddFile("reference", new MockFileData(DefaultContent));

@@ -1,8 +1,6 @@
-﻿using DistributedCacheExtensions.Local.Abstraction;
-using DistributedCacheExtensions.Local.Internal;
-using DistributedCacheExtensions.Local.Tests.Mocks;
+﻿using DistributedCacheExtensions.Abstractions;
+using DistributedCacheExtensions.Abstractions.Internal;
 using FluentAssertions;
-using FluentAssertions.Extensions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -16,20 +14,20 @@ namespace DistributedCacheExtensions.Local.Tests
 {
     public class DistributedFileCacheTests
     {
-        private readonly DistributedFileCache _sut;
+        private readonly DistributedCache _sut;
         private readonly IMetadataHandler _metadataHandler;
         private readonly IStorageHandler _storageHandler;
-        private readonly ILogger<DistributedFileCache> _logger;
+        private readonly ILogger<DistributedCache> _logger;
 
         private byte[] DefaultContent => Encoding.UTF8.GetBytes("myvalue");
 
         public DistributedFileCacheTests()
         {
-            _logger = NullLogger<DistributedFileCache>.Instance;
+            _logger = NullLogger<DistributedCache>.Instance;
             _metadataHandler = Substitute.For<IMetadataHandler>();
             _storageHandler = Substitute.For<IStorageHandler>();
 
-            _sut = new DistributedFileCache(_logger, _storageHandler, _metadataHandler);
+            _sut = new DistributedCache(_logger, _storageHandler, _metadataHandler);
         }
 
         [Fact]

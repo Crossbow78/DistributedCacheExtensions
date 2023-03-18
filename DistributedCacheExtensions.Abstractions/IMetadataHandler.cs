@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace DistributedCacheExtensions.Local.Abstraction
+namespace DistributedCacheExtensions.Abstractions
 {
-    internal interface IMetadataHandler
+    public interface IMetadataHandler
     {
         Task<ICacheMetadata> Get(string key);
 

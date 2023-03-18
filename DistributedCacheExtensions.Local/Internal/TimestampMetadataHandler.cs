@@ -1,4 +1,5 @@
-﻿using DistributedCacheExtensions.Local.Abstraction;
+﻿using DistributedCacheExtensions.Abstractions;
+using DistributedCacheExtensions.Abstractions.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
