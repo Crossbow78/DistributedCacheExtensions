@@ -24,7 +24,7 @@ namespace DistributedCacheExtensions.Internal
 
         public override void Expire(ICacheMetadata cacheMetadata)
         {
-            var metadataFileInfo = _fileSystem.FileInfo.FromFileName(cacheMetadata.FileInfo.FullName + ".metadata");
+            var metadataFileInfo = _fileSystem.FileInfo.New(cacheMetadata.FileInfo.FullName + ".metadata");
             metadataFileInfo.Delete();
             metadataFileInfo.Refresh();
             cacheMetadata.FileInfo.Delete();
@@ -40,8 +40,8 @@ namespace DistributedCacheExtensions.Internal
             var contentFile = GetCacheFile(fileName);
             var metadataFile = GetCacheFile(fileName + ".metadata");
 
-            var contentFileInfo = _fileSystem.FileInfo.FromFileName(contentFile);
-            var metadataFileInfo = _fileSystem.FileInfo.FromFileName(metadataFile);
+            var contentFileInfo = _fileSystem.FileInfo.New(contentFile);
+            var metadataFileInfo = _fileSystem.FileInfo.New(metadataFile);
 
             ExpirationMetadata metadata = null;
             if (metadataFileInfo.Exists)
@@ -67,7 +67,7 @@ namespace DistributedCacheExtensions.Internal
         {
             var referenceTime = _dateTimeProvider.Now.UtcDateTime;
 
-            var metadataFileInfo = _fileSystem.FileInfo.FromFileName(cacheMetadata.FileInfo.FullName + ".metadata");
+            var metadataFileInfo = _fileSystem.FileInfo.New(cacheMetadata.FileInfo.FullName + ".metadata");
 
             var expirationMetadata = new ExpirationMetadata
             {

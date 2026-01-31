@@ -32,7 +32,7 @@ namespace DistributedCacheExtensions.Internal
             // Note: relies on disabled NTFS behavior:
             // fsutil behavior set disablelastaccess 0x3
 
-            var fileInfo = _fileSystem.FileInfo.FromFileName(fileName);
+            var fileInfo = _fileSystem.FileInfo.New(fileName);
             var metadata = new CacheMetadata
             {
                 Key = key,
@@ -74,7 +74,7 @@ namespace DistributedCacheExtensions.Internal
                 var testFile = GetCacheFile("testfile");
                 var testDate = new DateTime(2000, 01, 01, 01, 23, 45, DateTimeKind.Utc);
                 var testContent = "TimestampMetadataHandler";
-                var file = _fileSystem.FileInfo.FromFileName(testFile);
+                var file = _fileSystem.FileInfo.New(testFile);
 
                 _fileSystem.File.WriteAllText(file.FullName, testContent);
                 _fileSystem.File.SetLastAccessTimeUtc(file.FullName, testDate);
