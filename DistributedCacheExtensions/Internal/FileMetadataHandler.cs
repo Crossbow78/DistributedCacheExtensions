@@ -46,7 +46,35 @@ namespace DistributedCacheExtensions.Internal
             ExpirationMetadata metadata = null;
             if (metadataFileInfo.Exists)
             {
-                metadata = JsonSerializer.Deserialize<ExpirationMetadata>(_fileSystem.File.ReadAllText(metadataFileInfo.FullName));
+                var corrupt = false;
+                try
+                {
+                    metadata = JsonSerializer.Deserialize<ExpirationMetadata>(_fileSystem.File.ReadAllText(metadataFileInfo.FullName));
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogWarning(ex, "Unreadable .metadata sidecar for cache key {Key}; treating as a cache miss and removing the entry", key);
+                    corrupt = true;
+                }
+
+                if (!corrupt && metadata == null)
+                {
+                    _logger.LogWarning("Empty .metadata sidecar for cache key {Key}; treating as a cache miss and removing the entry", key);
+                    corrupt = true;
+                }
+
+                if (corrupt)
+                {
+                    // Self-heal: a corrupt sidecar must not block reads and writes for this key
+                    // forever. Remove the pair so the next write repopulates it.
+                    metadataFileInfo.Delete();
+                    if (contentFileInfo.Exists)
+                    {
+                        contentFileInfo.Delete();
+                    }
+                    metadataFileInfo.Refresh();
+                    contentFileInfo.Refresh();
+                }
             }
 
             var cacheMetadata = new CacheMetadata
